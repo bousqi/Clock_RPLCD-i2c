@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Copyright (C) 2013-2015 Danilo Bargen
+Copyright (C) 2013-2014 Danilo Bargen
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of
 this software and associated documentation files (the "Software"), to deal in
@@ -25,7 +25,7 @@ from __future__ import print_function, division, absolute_import, unicode_litera
 import time
 from collections import namedtuple
 
-import RPi.GPIO as GPIO
+from smbus import SMBus
 
 from . import enum
 
@@ -75,7 +75,6 @@ LCD_MOVERIGHT = 0x04
 LCD_MOVELEFT = 0x00
 
 # Flags for function set
-LCD_8BITMODE = 0x10
 LCD_4BITMODE = 0x00
 LCD_2LINE = 0x08
 LCD_1LINE = 0x00
@@ -86,12 +85,13 @@ LCD_5x8DOTS = 0x00
 RS_INSTRUCTION = 0x00
 RS_DATA = 0x01
 
+PIN_E = 0x4
+PIN_RW = 0x2
+PIN_RS = 0x1
 
 ### NAMEDTUPLES ###
 
-PinConfig = namedtuple('PinConfig', 'rs rw e d0 d1 d2 d3 d4 d5 d6 d7 mode')
 LCDConfig = namedtuple('LCDConfig', 'rows cols dotsize')
-
 
 ### ENUMS ###
 
@@ -110,7 +110,6 @@ class CursorMode(enum.Enum):
     line = LCD_CURSORON | LCD_BLINKOFF
     blink = LCD_CURSOROFF | LCD_BLINKON
 
-
 ### HELPER FUNCTIONS ###
 
 def msleep(milliseconds):
@@ -122,39 +121,21 @@ def usleep(microseconds):
     """Sleep the specified amount of microseconds."""
     time.sleep(microseconds / 1000000.0)
 
-
 ### MAIN ###
 
 class CharLCD(object):
 
     # Init, setup, teardown
-
-    def __init__(self, pin_rs=15, pin_rw=18, pin_e=16, pins_data=[21, 22, 23, 24],
-                       numbering_mode=GPIO.BOARD,
-                       cols=20, rows=4, dotsize=8,
-                       auto_linebreaks=True):
+    #TODO: Change signature
+    def __init__(self, address, port = 1, cols=20, rows=4, dotsize=8):
         """
         Character LCD controller.
 
-        The default pin numbers are based on the BOARD numbering scheme (1-26).
-
-        You can save 1 pin by not using RW. Set ``pin_rw`` to ``None`` if you
-        want this.
-
         Args:
-            pin_rs:
-                Pin for register select (RS). Default: 15.
-            pin_rw:
-                Pin for selecting read or write mode (R/W). Set this to
-                ``None`` for read only mode. Default: 18.
-            pin_e:
-                Pin to start data read or write (E). Default: 16.
-            pins_data:
-                List of data bus pins in 8 bit mode (DB0-DB7) or in 8 bit mode
-                (DB4-DB7) in ascending order. Default: [21, 22, 23, 24].
-            numbering_mode:
-                Which scheme to use for numbering of the GPIO pins, either
-                ``GPIO.BOARD`` or ``GPIO.BCM``.  Default: ``GPIO.BOARD`` (1-26).
+            address:
+                Address on i2c bus
+            port:
+                i2c port
             rows:
                 Number of display rows (usually 1, 2 or 4). Default: 4.
             cols:
@@ -162,9 +143,6 @@ class CharLCD(object):
             dotsize:
                 Some 1 line displays allow a font height of 10px.
                 Allowed: 8 or 10. Default: 8.
-            auto_linebreaks:
-                Whether or not to automatically insert line breaks.
-                Default: True.
 
         Returns:
             A :class:`CharLCD` instance.
@@ -172,27 +150,14 @@ class CharLCD(object):
         """
         assert dotsize in [8, 10], 'The ``dotsize`` argument should be either 8 or 10.'
 
-        # Set attributes
-        self.numbering_mode = numbering_mode
-        if len(pins_data) == 4:  # 4 bit mode
-            self.data_bus_mode = LCD_4BITMODE
-            block1 = [None] * 4
-        elif len(pins_data) == 8:  # 8 bit mode
-            self.data_bus_mode = LCD_8BITMODE
-            block1 = pins_data[:4]
-        else:
-            raise ValueError('There should be exactly 4 or 8 data pins.')
-        block2 = pins_data[-4:]
-        self.pins = PinConfig(rs=pin_rs, rw=pin_rw, e=pin_e,
-                              d0=block1[0], d1=block1[1], d2=block1[2], d3=block1[3],
-                              d4=block2[0], d5=block2[1], d6=block2[2], d7=block2[3],
-                              mode=numbering_mode)
         self.lcd = LCDConfig(rows=rows, cols=cols, dotsize=dotsize)
 
         # Setup GPIO
-        GPIO.setmode(self.numbering_mode)
-        for pin in list(filter(None, self.pins))[:-1]:
-            GPIO.setup(pin, GPIO.OUT)
+        self.address = address
+        self.port = port
+
+        self.bus = SMBus(self.port)
+        c.msleep(50)
 
         # Setup initial display configuration
         displayfunction = self.data_bus_mode | LCD_5x8DOTS
@@ -208,36 +173,18 @@ class CharLCD(object):
         # Create content cache
         self._content = [[0x20] * cols for _ in range(rows)]
 
-        # Set up auto linebreaks
-        self.auto_linebreaks = auto_linebreaks
-        self.recent_auto_linebreak = False
-
         # Initialization
         msleep(50)
-        GPIO.output(self.pins.rs, 0)
-        GPIO.output(self.pins.e, 0)
-        if self.pins.rw is not None:
-            GPIO.output(self.pins.rw, 0)
 
-        # Choose 4 or 8 bit mode
-        if self.data_bus_mode == LCD_4BITMODE:
-            # Hitachi manual page 46
-            self._write4bits(0x03)
-            msleep(4.5)
-            self._write4bits(0x03)
-            msleep(4.5)
-            self._write4bits(0x03)
-            usleep(100)
-            self._write4bits(0x02)
-        elif self.data_bus_mode == LCD_8BITMODE:
-            # Hitachi manual page 45
-            self._write8bits(0x30)
-            msleep(4.5)
-            self._write8bits(0x30)
-            usleep(100)
-            self._write8bits(0x30)
-        else:
-            raise ValueError('Invalid data bus mode: {}'.format(self.data_bus_mode))
+        # Hitachi manual page 46
+        # 4 bit mode
+        self._write4bits(0x03)
+        msleep(4.5)
+        self._write4bits(0x03)
+        msleep(4.5)
+        self._write4bits(0x03)
+        usleep(100)
+        self._write4bits(0x02)
 
         # Write configuration to display
         self.command(LCD_FUNCTIONSET | displayfunction)
@@ -262,7 +209,7 @@ class CharLCD(object):
     def close(self, clear=False):
         if clear:
             self.clear()
-        GPIO.cleanup()
+
 
     # Properties
 
@@ -290,7 +237,7 @@ class CharLCD(object):
             raise ValueError('Internal _text_align_mode has invalid value.')
 
     def _set_text_align_mode(self, value):
-        if value not in Alignment:
+        if not value in Alignment:
             raise ValueError('Cursor move mode must be of ``Alignment`` type.')
         self._text_align_mode = int(value)
         self.command(LCD_ENTRYMODESET | self._text_align_mode | self._display_shift_mode)
@@ -306,7 +253,7 @@ class CharLCD(object):
             raise ValueError('Internal _display_shift_mode has invalid value.')
 
     def _set_write_shift_mode(self, value):
-        if value not in ShiftMode:
+        if not value in ShiftMode:
             raise ValueError('Write shift mode must be of ``ShiftMode`` type.')
         self._display_shift_mode = int(value)
         self.command(LCD_ENTRYMODESET | self._text_align_mode | self._display_shift_mode)
@@ -333,7 +280,7 @@ class CharLCD(object):
             raise ValueError('Internal _cursor_mode has invalid value.')
 
     def _set_cursor_mode(self, value):
-        if value not in CursorMode:
+        if not value in CursorMode:
             raise ValueError('Cursor mode must be of ``CursorMode`` type.')
         self._cursor_mode = int(value)
         self.command(LCD_DISPLAYCONTROL | self._display_mode | self._cursor_mode)
@@ -351,8 +298,7 @@ class CharLCD(object):
         To control multiline behavior, use newline (\n) and carriage return
         (\r) characters.
 
-        Lines that are too long automatically continue on next line, as long as
-        ``auto_linebreaks`` has not been disabled.
+        Lines that are too long automatically continue on next line.
 
         Make sure that you're only passing unicode objects to this function. If
         you're dealing with bytestrings (the default string type in Python 2),
@@ -371,25 +317,11 @@ class CharLCD(object):
         supported.
 
         """
-        ignored = None  # Used for ignoring manual linebreaks after auto linebreaks
         for char in value:
             # Write regular chars
             if char not in '\n\r':
                 self.write(ord(char))
-                ignored = None
                 continue
-            # If an auto linebreak happened recently, ignore this write.
-            if self.recent_auto_linebreak is True:
-                # No newline chars have been ignored yet. Do it this time.
-                if ignored is None:
-                    ignored = char
-                    continue
-                # A newline character has been ignored recently. If the current
-                # character is different, ignore it again. Otherwise, reset the
-                # ignored character tracking.
-                if ignored != char:  # A carriage return and a newline
-                    ignored = None  # Reset ignore list
-                    continue
             # Handle newlines and carriage returns
             row, col = self.cursor_pos
             if char == '\n':
@@ -495,77 +427,53 @@ class CharLCD(object):
 
         # Update cursor position.
         if self.text_align_mode is Alignment.left:
-            if self.auto_linebreaks is False or col < self.lcd.cols - 1:
+            if col < self.lcd.cols - 1:
                 # No newline, update internal pointer
                 newpos = (row, col + 1)
                 if unchanged:
                     self.cursor_pos = newpos
                 else:
                     self._cursor_pos = newpos
-                self.recent_auto_linebreak = False
             else:
                 # Newline, reset pointer
                 if row < self.lcd.rows - 1:
                     self.cursor_pos = (row + 1, 0)
                 else:
                     self.cursor_pos = (0, 0)
-                self.recent_auto_linebreak = True
         else:
-            if self.auto_linebreaks is False or col > 0:
+            if col > 0:
                 # No newline, update internal pointer
                 newpos = (row, col - 1)
                 if unchanged:
                     self.cursor_pos = newpos
                 else:
                     self._cursor_pos = newpos
-                self.recent_auto_linebreak = False
             else:
                 # Newline, reset pointer
                 if row < self.lcd.rows - 1:
                     self.cursor_pos = (row + 1, self.lcd.cols - 1)
                 else:
                     self.cursor_pos = (0, self.lcd.cols - 1)
-                self.recent_auto_linebreak = True
 
     # Low level commands
 
     def _send(self, value, mode):
         """Send the specified value to the display with automatic 4bit / 8bit
         selection. The rs_mode is either ``RS_DATA`` or ``RS_INSTRUCTION``."""
+        self._write4bits(mode | (value & 0xF0))
+        self._write4bits(mode | ((value << 4) & 0xF0))
 
-        # Choose instruction or data mode
-        GPIO.output(self.pins.rs, mode)
-
-        # If the RW pin is used, set it to low in order to write.
-        if self.pins.rw is not None:
-            GPIO.output(self.pins.rw, 0)
-
-        # Write data out in chunks of 4 or 8 bit
-        if self.data_bus_mode == LCD_8BITMODE:
-            self._write8bits(value)
-        else:
-            self._write4bits(value >> 4)
-            self._write4bits(value)
 
     def _write4bits(self, value):
         """Write 4 bits of data into the data bus."""
-        for i in range(4):
-            bit = (value >> i) & 0x01
-            GPIO.output(self.pins[i + 7], bit)
-        self._pulse_enable()
+        self.bus.write_byte(self.address, value)
+        self._pulse_enable(value)
 
-    def _write8bits(self, value):
-        """Write 8 bits of data into the data bus."""
-        for i in range(8):
-            bit = (value >> i) & 0x01
-            GPIO.output(self.pins[i + 3], bit)
-        self._pulse_enable()
-
-    def _pulse_enable(self):
+    def _pulse_enable(self, value):
         """Pulse the `enable` flag to process data."""
-        GPIO.output(self.pins.e, 0)
+        self.bus.write_byte(self.address, value & ~PIN_E)
         usleep(1)
-        GPIO.output(self.pins.e, 1)
+        self.bus.write_byte(self.address, value | PIN_E)
         usleep(1)
-        GPIO.output(self.pins.e, 0)
+        self.bus.write_byte(self.address, value & ~PIN_E)
         usleep(100)  # commands need > 37us to settle

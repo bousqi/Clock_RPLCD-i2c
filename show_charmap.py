@@ -25,7 +25,7 @@ from __future__ import print_function, division, absolute_import, unicode_litera
 
 import sys
 
-from RPLCD import CharLCD
+from RPLCD-i2c import CharLCD
 
 
 try:

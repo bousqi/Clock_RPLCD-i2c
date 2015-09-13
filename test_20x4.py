@@ -4,9 +4,9 @@ from __future__ import print_function, division, absolute_import, unicode_litera
 
 import sys
 
-from RPLCD import CharLCD
-from RPLCD import Alignment, CursorMode, ShiftMode
-from RPLCD import cursor, cleared
+from RPLCD-i2c import CharLCD
+from RPLCD-i2c import Alignment, CursorMode, ShiftMode
+from RPLCD-i2c import cursor, cleared
 
 try:
     input = raw_input
