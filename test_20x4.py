@@ -81,10 +81,12 @@ lcd.shift_display(-4)
 input('Shift should now be undone. ')
 
 lcd.text_align_mode = Alignment.right
+lcd.cursor_mode = CursorMode.hide
 lcd.write_string(' Spam')
 input('The word "Spam" should now be inverted. ')
 
 lcd.text_align_mode = Alignment.left
+lcd.cursor_mode = CursorMode.hide
 lcd.write_string(' Wurscht')
 input('The word "mapS" should now be replaced with "Wurscht". ')
 
@@ -114,10 +116,6 @@ lcd.create_char(0, happy)
 lcd.home()
 lcd.write_string(unichr(0))
 input('Now both faces should be happy. ')
-
-lcd.clear()
-lcd.write_string('12345678901234567890\r\n2nd line')
-input('The first line should be filled with numbers, the second line should show "2nd line"')
 
 lcd.clear()
 print('Test done.')
