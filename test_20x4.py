@@ -19,7 +19,7 @@ except NameError:
     unichr = chr
 
 
-lcd = CharLCD()
+lcd = CharLCD(address=0x38, port=1, cols=20, rows=4, dotsize=8)
 
 input('Display should be blank. ')
 
