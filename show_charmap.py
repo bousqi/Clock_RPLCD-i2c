@@ -62,13 +62,16 @@ if __name__ == '__main__':
         while True:
             page_start = page * chars_per_page
             page_end = page_start + chars_per_page
+            if page_end > 256:
+                page_end = 256
             lcd.clear()
             print('Displaying page %d (characters %d-%d).' %
                        (page, page_start, page_end - 1))
             for i in range(page_start, page_end):
-                if i <= 255:
+                if i < 255:
                     lcd.write_string(unichr(i))
                 else:
+                    lcd.write_string(unichr(i))
                     safe_input('Press <ENTER> to exit.')
                     lcd.clear()
                     sys.exit(0)
