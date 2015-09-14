@@ -4,16 +4,14 @@ from setuptools import setup
 
 readme = open('README.rst').read()
 
-setup(name='RPLCD-i2c',
+setup(name='RPLCD_i2c',
       version='0.3.0',
-      description='A Raspberry Pi LCD library for the widely used Hitachi HD44780 controller.',
+      description='A Raspberry Pi LCD library for the widely used Hitachi HD44780 controller. I2C version.',
       long_description=readme,
-      author='Danilo Bargen',
-      author_email='mail@dbrgn.ch',
-      url='https://github.com/dbrgn/RPLCD',
+      url='https://github.com/zador-blood-stained/RPLCD-i2c',
       license='MIT',
       keywords='raspberry, raspberry pi, lcd, liquid crystal, hitachi, hd44780',
-      packages=['RPLCD'],
+      packages=['RPLCD_i2c'],
       platforms=['any'],
       classifiers=[
           'Development Status :: 4 - Beta',

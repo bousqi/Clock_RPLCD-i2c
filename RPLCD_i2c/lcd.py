@@ -29,7 +29,6 @@ from smbus import SMBus
 
 from . import enum
 
-
 ### PYTHON 3 COMPAT ###
 
 try:
@@ -157,10 +156,10 @@ class CharLCD(object):
         self.port = port
 
         self.bus = SMBus(self.port)
-        c.msleep(50)
+        msleep(50)
 
         # Setup initial display configuration
-        displayfunction = self.data_bus_mode | LCD_5x8DOTS
+        displayfunction = LCD_4BITMODE | LCD_5x8DOTS
         if rows == 1:
             displayfunction |= LCD_1LINE
         elif rows in [2, 4]:
@@ -466,7 +465,7 @@ class CharLCD(object):
 
     def _write4bits(self, value):
         """Write 4 bits of data into the data bus."""
-        self.bus.write_byte(self.address, value)
+        self.bus.write_byte(self.address, value & ~PIN_RW)
         self._pulse_enable(value)
 
     def _pulse_enable(self, value):

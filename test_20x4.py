@@ -4,9 +4,9 @@ from __future__ import print_function, division, absolute_import, unicode_litera
 
 import sys
 
-from RPLCD-i2c import CharLCD
-from RPLCD-i2c import Alignment, CursorMode, ShiftMode
-from RPLCD-i2c import cursor, cleared
+from RPLCD_i2c import CharLCD
+from RPLCD_i2c import Alignment, CursorMode, ShiftMode
+from RPLCD_i2c import cursor, cleared
 
 try:
     input = raw_input
@@ -122,10 +122,6 @@ input('Now both faces should be happy. ')
 lcd.clear()
 lcd.write_string('12345678901234567890\r\n2nd line')
 input('The first line should be filled with numbers, the second line should show "2nd line"')
-
-lcd.clear()
-lcd.write_string('999456..............\n\r\n\n\n123')
-input('The display should show "123456...................." on the first line')
 
 lcd.clear()
 print('Test done.')
