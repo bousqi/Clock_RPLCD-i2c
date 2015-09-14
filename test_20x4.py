@@ -99,11 +99,7 @@ lcd.clear()
 lcd.write_string('This is a long string that will wrap across multiple lines!')
 input('Text should nicely wrap around lines. ')
 
-lcd.clear()
 lcd.cursor_mode = CursorMode.hide
-lcd.write_string('Paris: 21{deg}C\n\rZ{uuml}rich: 18{deg}C'.format(deg=unichr(176), uuml=unichr(129)))
-print('Text should now show "Paris: 21°C, Zürich: 18°C" without any encoding issues.', end='')
-input()
 
 # Test custom chars
 lcd.clear()
