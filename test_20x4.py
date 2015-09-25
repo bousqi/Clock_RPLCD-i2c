@@ -118,4 +118,16 @@ lcd.write_string(unichr(0))
 input('Now both faces should be happy. ')
 
 lcd.clear()
+lcd.set_backlight(False)
+lcd.home()
+lcd.write_string('No backlight')
+input('Display backlight should be off (if wired). ')
+
+lcd.clear()
+lcd.set_backlight(True)
+lcd.home()
+lcd.write_string('Backlight')
+input('Display backlight should be back on (if wired). ')
+
+lcd.clear()
 print('Test done.')

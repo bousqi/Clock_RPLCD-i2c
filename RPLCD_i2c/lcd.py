@@ -426,7 +426,7 @@ class CharLCD(object):
     def set_backlight(self, value):
         """Set backlight state (if connected) """
         assert isinstance(value, bool), 'Backlight state can only be True or False'
-        self.backlight_state = backlight_state
+        self.backlight_state = value
         self.bus.write_byte(self.address, PIN_BKLIGHT if self.backlight_state else 0x00)
         
     # Mid level commands
@@ -488,15 +488,13 @@ class CharLCD(object):
         self._write4bits(mode | (value & 0xF0))
         self._write4bits(mode | ((value << 4) & 0xF0))
 
-
     def _write4bits(self, value):
         """Write 4 bits of data into the data bus."""
-        value &= ~PIN_RW
         if self.backlight_state:
            value |= PIN_BKLIGHT
         else:
            value &= ~PIN_BKLIGHT
-        self.bus.write_byte(self.address, value)
+        self.bus.write_byte(self.address, value & ~PIN_RW)
         self._pulse_enable(value)
 
     def _pulse_enable(self, value):

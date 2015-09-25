@@ -5,7 +5,7 @@ from setuptools import setup
 readme = open('README.rst').read()
 
 setup(name='RPLCD_i2c',
-      version='0.3.0',
+      version='0.4.1',
       description='A Raspberry Pi LCD library for the widely used Hitachi HD44780 controller. I2C version.',
       long_description=readme,
       url='https://github.com/zador-blood-stained/RPLCD-i2c',
