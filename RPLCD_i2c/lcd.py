@@ -87,6 +87,7 @@ RS_DATA = 0x01
 PIN_E = 0x4
 PIN_RW = 0x2
 PIN_RS = 0x1
+PIN_BKLIGHT = 0x8
 
 ### NAMEDTUPLES ###
 
@@ -127,8 +128,8 @@ def usleep(microseconds):
 class CharLCD(object):
 
     # Init, setup, teardown
-    #TODO: Change signature
-    def __init__(self, address, port = 1, cols=20, rows=4, dotsize=8, ignore_special=False):
+    def __init__(self, address, port = 1, cols=20, rows=4, dotsize=8, 
+            ignore_special=False, backlight_state=True):
         """
         Character LCD controller.
 
@@ -146,8 +147,15 @@ class CharLCD(object):
                 Allowed: 8 or 10. Default: 8.
             ignore_special:
                 Whether or not to ignore special characters '\r' and '\n'.
-                Set to True if you need symbols 0x0A and/or 0x0D from LCD character set
+                Set to True if you need symbols 0x0A and/or 0x0D from LCD character set.
                 Default: False.
+            backlight_state:
+                Backlight state on display init.
+                Backlight control requires N-channel MOSFET gate connected to P3 output
+                (pin 7 on PCF8574A). See RPLCD-i2c-backlight.sch.svg for details.
+                Backlight will be enabled on power-up (before library init)
+                due to port expander default value 0xFF.
+                Default: True (backlight is on).
 
         Returns:
             A :class:`CharLCD` instance.
@@ -181,6 +189,9 @@ class CharLCD(object):
         # Set up ignore special characters
         self.ignore_special = ignore_special
 
+        # Set up backlight state
+        self.backlight_state = backlight_state
+        
         # Initialization
         msleep(50)
 
@@ -412,6 +423,12 @@ class CharLCD(object):
         # Restore cursor pos
         self.cursor_pos = pos
 
+    def set_backlight(self, value):
+        """Set backlight state (if connected) """
+        assert isinstance(value, bool), 'Backlight state can only be True or False'
+        self.backlight_state = backlight_state
+        self.bus.write_byte(self.address, PIN_BKLIGHT if self.backlight_state else 0x00)
+        
     # Mid level commands
 
     def command(self, value):
@@ -466,15 +483,20 @@ class CharLCD(object):
     # Low level commands
 
     def _send(self, value, mode):
-        """Send the specified value to the display with automatic 4bit / 8bit
-        selection. The rs_mode is either ``RS_DATA`` or ``RS_INSTRUCTION``."""
+        """Send the specified value to the display.
+        The rs_mode is either ``RS_DATA`` or ``RS_INSTRUCTION``."""
         self._write4bits(mode | (value & 0xF0))
         self._write4bits(mode | ((value << 4) & 0xF0))
 
 
     def _write4bits(self, value):
         """Write 4 bits of data into the data bus."""
-        self.bus.write_byte(self.address, value & ~PIN_RW)
+        value &= ~PIN_RW
+        if self.backlight_state:
+           value |= PIN_BKLIGHT
+        else:
+           value &= ~PIN_BKLIGHT
+        self.bus.write_byte(self.address, value)
         self._pulse_enable(value)
 
     def _pulse_enable(self, value):

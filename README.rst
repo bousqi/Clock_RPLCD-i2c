@@ -45,9 +45,6 @@ SCL        5                 SCL            14
 SDA        3                 SDA            15       
 ========== ================= ============== ===============
 
-It is recommended to connect 0.1 uF ceramic bypass capacitor 
-between VCC (16) and GND (8) pins of port expander
-
 Connecting LCD display to PCF8574A and Raspberry Pi
 -----------
 
@@ -55,7 +52,6 @@ with contrast set to maximum (U0 connected to GND)
 
 ============== ============== ============ ===========
 PCF8574 signal PCF8574 pin #  LCD signal   LCD Pin #     
-VCC            16             VCC          2             
 GND            8              GND, U0      1, 3          
 P0             4              RS (A0)      4             
 P1             5              R/W          5             
@@ -65,6 +61,34 @@ P5             10             DB5          12
 P6             11             DB6          13            
 P7             12             DB7          14            
 ============== ============== ============ ===========
+
+Connect display pin 2 (VCC) to Raspberry Pi pin 2 (5v) 
+OR to Raspberry Pi pin 1 (3.3v)
+depending on your display required supply voltage.
+
+To activate display backlight connect LCD pin 15 (+LED) to 5 or 3.3v,
+connect LCD pin 16 (-LED) to GND directly or through a MOSFET (see schemacic below).
+
+It is recommended to connect 0.1 uF ceramic bypass capacitor
+between VCC (16) and GND (8) pins of port expander.
+
+Connection schematics
+========
+
+Without backlight control
+-----------
+
+.. image:: https://cdn.rawgit.com/zador-blood-stained/RPLCD-i2c/master/RPLCD-i2c.sch.svg
+	:alt: Schematic w/o backlight control
+
+With backlight control
+-----------
+
+.. image:: https://cdn.rawgit.com/zador-blood-stained/RPLCD-i2c/master/RPLCD-i2c-backlight.sch.svg
+	:alt: Schematic with backlight control
+
+Backlight control requires N-channel MOSFET 
+with certain characteristics, i.e. BS170, 2N7000, 2N7002.
 
 Installation
 ========
@@ -87,10 +111,10 @@ For Raspberry Pi Model B Rev 1 use bus number 0
 I²C device address
 -----------
 
-To check your port expander address use ``gpio i2cd`` command 
-(alternatively ``sudo i2cdetect -y 0`` 
+To check your port expander address use ``gpio i2cd`` command
+(alternatively ``sudo i2cdetect -y 0``
 or ``sudo i2cdetect -y 1`` depending on bus number)
-Example output with one PCF8574A connected at address 0x38
+Example output with one PCF8574A connected at address 0x38:
 
 .. code::
 
@@ -106,9 +130,9 @@ Example output with one PCF8574A connected at address 0x38
      70: -- -- -- -- -- -- -- --
      %
 
-or refer to datasheet for your port expander
+or refer to datasheet for your port expander.
 
-Features, Examples & Usage
+Features, Code examples & Usage
 ========
 
 See original library documentation here: https://github.com/dbrgn/RPLCD
