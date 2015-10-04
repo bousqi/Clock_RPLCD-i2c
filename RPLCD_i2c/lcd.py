@@ -197,13 +197,14 @@ class CharLCD(object):
 
         # Hitachi manual page 46
         # 4 bit mode
-        self._write4bits(0x03)
+
+        self._write4bits(0x03 << 4)
         msleep(4.5)
-        self._write4bits(0x03)
+        self._write4bits(0x03 << 4)
         msleep(4.5)
-        self._write4bits(0x03)
+        self._write4bits(0x03 << 4)
         usleep(100)
-        self._write4bits(0x02)
+        self._write4bits(0x02 << 4)
 
         # Write configuration to display
         self.command(LCD_FUNCTIONSET | displayfunction)
@@ -494,14 +495,7 @@ class CharLCD(object):
            value |= PIN_BKLIGHT
         else:
            value &= ~PIN_BKLIGHT
-        self.bus.write_byte(self.address, value & ~PIN_RW)
-        self._pulse_enable(value)
-
-    def _pulse_enable(self, value):
-        """Pulse the `enable` flag to process data."""
-        self.bus.write_byte(self.address, value & ~PIN_E)
-        usleep(1)
         self.bus.write_byte(self.address, value | PIN_E)
         usleep(1)
         self.bus.write_byte(self.address, value & ~PIN_E)
-        usleep(100)  # commands need > 37us to settle
+        usleep(100)

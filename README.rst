@@ -1,8 +1,9 @@
 RPLCD-i2c
 #####
 
-A Python 2/3 Raspberry PI Character LCD library for the Hitachi HD44780
+A Python 2/3 Raspberry Pi Character LCD library for the Hitachi HD44780
 controller, I²C only version.
+May work on other embedded boards with I²C bus.
 
 Based on RPLCD library https://github.com/dbrgn/RPLCD
 
