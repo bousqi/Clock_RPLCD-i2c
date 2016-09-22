@@ -50,7 +50,7 @@ if __name__ == '__main__':
         sys.exit(1)
 
     rows, cols = int(sys.argv[1]), int(sys.argv[2])
-    lcd = CharLCD(address=0x38, port=1, cols=cols, rows=rows, dotsize=8, ignore_special=True)
+    lcd = CharLCD(address=0x3F, port=1, cols=cols, rows=rows, dotsize=8, ignore_special=True)
 
     print('This tool shows the character map of your LCD on the display.')
     print('Press ctrl+c at any time to abort.\n')

@@ -234,6 +234,8 @@ def clock_temp():
     disp_number(temp_digits[0], 6)
     disp_number(temp_digits[1], 10)
     disp_number("C", 14)
+    lcd.cursor_pos = (0, 13)
+    lcd.write_string(unichr(223))
     # date entering from left
     shift("right")
     sleep(5)
