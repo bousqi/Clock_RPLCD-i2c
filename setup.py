@@ -4,14 +4,14 @@ from setuptools import setup
 
 readme = open('README.rst').read()
 
-setup(name='RPLCD_i2c',
-      version='0.4.1',
-      description='A Raspberry Pi LCD library for the widely used Hitachi HD44780 controller. I2C version.',
+setup(name='Clock-RPLCD_i2c',
+      version='0.5.0',
+      description='Custom clock for Raspberry Pi, using HD44780 over i2c.',
       long_description=readme,
-      url='https://github.com/zador-blood-stained/RPLCD-i2c',
+      url='https://github.com/bousqi/Clock_RPLCD-i2c',
       license='MIT',
-      keywords='raspberry, raspberry pi, lcd, liquid crystal, hitachi, hd44780',
-      packages=['RPLCD_i2c'],
+      keywords='raspberry, raspberry pi, lcd, liquid crystal, hitachi, hd44780, clock',
+      packages=['Clock-RPLCD_i2c'],
       platforms=['any'],
       classifiers=[
           'Development Status :: 4 - Beta',
