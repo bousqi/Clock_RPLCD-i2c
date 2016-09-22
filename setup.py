@@ -4,7 +4,7 @@ from setuptools import setup
 
 readme = open('README.rst').read()
 
-setup(name='Clock-RPLCD_i2c',
+setup(name='Clock_RPLCD-i2c',
       version='0.5.0',
       description='Custom clock for Raspberry Pi, using HD44780 over i2c.',
       long_description=readme,

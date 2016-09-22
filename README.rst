@@ -31,8 +31,8 @@ Installation
 
 .. code::
 
-     git clone https://github.com/bousqi/16x02_CustomClock.git
-     cd 16x02_CustomClock
+     git clone https://github.com/bousqi/Clock_RPLCD-i2c.git
+     cd Clock_RPLCD-i2c
      sudo python3 setup.py install
      # and/or
      sudo python setup.py install
