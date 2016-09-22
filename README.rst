@@ -80,6 +80,13 @@ To test your 20x4 display, please run the ``test_20x4.py`` script and
 confirm/verify each step with the enter key. Make sure to set your bus 
 number and address to the ``CharLCD`` constructor in ``test_20x4.py``.
 
+To test your 16x2 display, please run the ``test_16x2.py`` script and
+confirm/verify each step with the enter key. Make sure to set your bus 
+number and address to the ``CharLCD`` constructor in ``test_16x2.py``.
+
+You can check the charmap on your display with ``show_charmap.py 2 16``
+on a 16x2 display.
+
 License
 =======
 
