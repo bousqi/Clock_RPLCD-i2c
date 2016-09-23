@@ -6,7 +6,7 @@ After=network.target
 User=nico
 Type=simple
 ExecStart=/usr/local/src/display/clock/clock.py
-ExecStop=/usr/local/src/display/lcd_off.py
+KillSignal=SIGINT
 
 [Install]
 WantedBy=multi-user.target
