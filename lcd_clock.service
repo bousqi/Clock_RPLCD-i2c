@@ -1,0 +1,12 @@
+[Unit]
+Description=LCD Service to display clock, date and BME temperature
+After=network.target
+
+[Service]
+User=nico
+Type=simple
+ExecStart=/usr/local/src/display/clock/clock.py
+ExecStop=/usr/local/src/display/lcd_off.py
+
+[Install]
+WantedBy=multi-user.target
